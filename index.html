@@ -1,165 +1,166 @@
+﻿
+<html lang="en">
 
-<html>
+<head>
+	<title>Music Chart Maker</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="utf-8" />
 
-	<head>
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-151410598-1"></script>
-		<script>
-		  window.dataLayer = window.dataLayer || [];
-		  function gtag(){dataLayer.push(arguments);}
-		  gtag('js', new Date());
-
-		  gtag('config', 'UA-151410598-1');
-		</script>
-		<link href="album.css" rel="stylesheet"  type="text/css">
-		<script src = "https://code.jquery.com/jquery-3.1.0.js"></script>
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-		<script src="js/bootstrap.min.js"></script>
-		<link rel="stylesheet" type="text/css" href="album.css">
-		<style type="text/css">
-			img {
-				
-			}
-			#albums {
-				padding-top: 30px;
-				padding-bottom: 50px;
-				overflow-x: hidden;
-				background-color: #99ccff;
-				width: 100vw;
-				position: relative;
-				margin-left: -50vw;
-				left: 50%;
-			}
-			#header {
-				padding-top: 10px;
-				padding-bottom: 30px;
-				overflow-x: hidden;
-				background-color: #123456;
-				width: 100vw;
-				position: relative;
-				margin-left: -50vw;
-				left: 50%;
-				color: white;
-			}
-		</style>
-		<title>Album Collage Maker</title>
-	</head>
+	<!-- CSS -->
+	<!-- BOOTSTRAP 4.3.1 -->
+	<link
+		rel="stylesheet" 
+		href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" 
+		integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" 
+		crossorigin="anonymous"> 
+	<link type="text/css" rel="stylesheet" href="css/my-style.css">
+	<link type="text/css" rel="stylesheet" href="css/bootstrap-colorpicker.min.css">
 	
-	<body> 
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-12 text-center jumbotron" id="header">
-				<h1><kbd>Album Art Collage Maker<kbd></h1>
-				<b>Instructions:</b> Click on a box to insert album art &middot; Drag/drop to move images &middot; Change grid settings
-				</div>					
-			</div>
-			<div class="row" id="firstrow">
-				<div class="col-lg-3">
-				</div>
-				<div class="col-lg-3 ">
-					<form class="form-horizontal">
-						<div class="form-group">
-							<label for="inputColor" class="control-label col-lg-7">Background Color (Hex)</label>
-							<div class="col-lg-5">
-							<input type="text" class="form-control" id="backcolor" value="#123456" placeholder="Hex Value">
-							</div>
-						</div>
-						
-						<div class="form-group">
-							<label for="inputColor" class="control-label col-lg-8"># of Rows</label>
-							<div class="col-lg-4">
-							<input type="text" class="form-control" id="numRows" value="3"></input>
-							</div>
-						</div>
-						
-						<div class="form-group">
-							<label for="inputColor" class="control-label col-lg-8">Margin (in pixels)</label>
-							<div class="col-lg-4">
-							<input type="text" class="form-control" id="marginSize" value="0"></input>
-							</div>
-						</div>
-						
-						
-					</form>
-				</div>
-				<div class="col-lg-3">
-					<form class="form-horizontal">
-						<div class="form-group">
-							<label for="inputColor" class="control-label col-lg-7">Image Size (in pixels)</label>
-							<div class="col-lg-5">
-							<input type="text" class="form-control" id="artsize" value="100">
-							</div>
-						</div>
-						<div class="form-group">
-							<label for="inputColor" class="control-label col-lg-8"># of Columns</label>
-							<div class="col-lg-4">
-							<input type="text" class="form-control" id="numCols" value="10"></input>
-							</div>
-						</div>
-						
-						
-						<div align="center" class="col-lg-12">
-							<div class="col-lg-6">
-								<button type="button" class="btn-info btn-sm" onclick="generateGrid()">Apply Settings</button>
-							</div>
-							<div class="col-lg-6">
-								<button type="button" class="btn-success btn-sm" onclick="shuffle()">Shuffle Images</button>
-							</div>
-							
-						</div>
-						
-					</form>
-				</div>
-					
-				<div class="col-lg-3">
-				</div>
-			</div>
-			
-			<div width="100%" id="albums">
-			</div>
-			<div id="myModal" class="modal" role="dialog">
-				
-					<div class="modal-dialog modal-lg">
-						<div class="modal-content">
-							<div class="modal-header">
-								<button type="button" class="close" data-dismiss="modal">&times; </button>
-								<h4 class="modal-title"><span class="glyphicon glyphicon-search"></span>  Search for an album  </h4>
-							</div>
-							<div class="modal-body" id="modalBody">
-								<form>
-									<div class="form-group">
-										<input type="text" class="form-control" id="searchTerm" placeholder="Enter artist and/or album">
-									</div>
-								</form>
-								<div id="albumsFound">
-									
+
+	<!-- JS -->
+	<!-- JQUERY 3.4.1 -->
+	<script
+		src="https://code.jquery.com/jquery-3.4.1.min.js"
+		integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+		crossorigin="anonymous">
+	</script>
+	<!-- POPPER 1.14.7 -->
+	<script 
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" 
+		integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" 
+		crossorigin="anonymous">
+	</script>	
+	<!-- BOOTSTRAP 4.3.1 -->
+	<script 
+		src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" 
+		integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" 
+		crossorigin="anonymous">
+	</script>
+	<!-- BOOSTRAP COLOR PICKER 3.2.0 -->
+	<script src = "js/bootstrap-colorpicker.min.js"></script>
+	<!-- MYSCRIPTS -->
+	<script src = "js/my-scripts.js"></script>
+	<script src = "js/albumart.js"></script>
+		
+</head>
+	
+<body class="bg-dark"> 
+<div class="row">
+	<!-- Jumbotron with title and instruction -->
+		<div class="jumbotron col-12 bg-dark text-center text-white p-0 m-0" 
+				 id="jumbo-info-settings">
+			<h1>Music Chart Maker</h1>
+			<h4>Original project by <a href="https://github.com/xsaardo/Album-Art-Collage-Creator" target="_blank" rel="noopener">xsaardo</a></h4>
+			<br />
+			<b>Instructions:</b> 
+			Click on a box to insert album art &middot; Drag/drop to move images &middot; Change grid settings
+			<br />
+
+			<!-- SETTINGS -->
+			<div class="row d-flex justify-content-center mt-3" id="settings">
+				<form class="mb-0 col-11 justify-content-center">
+					<!-- BG-COLOR/IMAGE-BG -->
+					<div class="form-group">
+						<div class="row">
+							<div class="input-group justify-content-center flex-nowrap">
+								<div class="input-group-prepend">
+										<span class="input-group-text">BG image URL</span>
 								</div>
-							</div>
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default" onclick="albumsearch()">Search!</button>
+								<input class="col-6" type="url" id="bgImageURL"/>
+								<div class="input-group-append bg-primary">
+									<button class="btn" type="button" onclick="setBgImage()">Set</button>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
+
+					<!-- BG COLOR/COL/ROW NUMBER -->
+					<div class="form-group form-inline justify-content-center">
+						<div id="bgColorPicker" class="input-group mr-3">
+							<!-- input-group-prepend/append: adds the span at the beginning/ending -->
+							<div class="input-group-prepend">
+									<span class="input-group-text">BG color</span>
+									<span class="input-group-text colorpicker-input-addon"><i></i></span>
+							</div>
+							<input type="text" class="form-control" hidden/>
+						</div>
+						<div class="input-group mx-2">
+							<div class="input-group-prepend">
+										<span class="input-group-text">Rows</span>
+							</div>
+							<input type="number" min="1" class="form-control p-2" id="numRows" value="4"/>
+						</div>
+						<div class="input-group ml-2">
+							<div class="input-group-prepend">
+									<span class="input-group-text">Cols</span>
+							</div>
+							<input type="number" min="1" class="form-control p-2" id="numCols" value="4"/>
+						</div>
+					</div>
+
+					<!-- IMG SIZE -->
+					<div class="form-group form-inline justify-content-center">
+						<label for="artsize" class="control-label col-form-label">Image Size</label>
+						<input type="range" class="mx-2" min="100" max="300" step="1" id="artsize" value="100">
+						<span id="artsizeVal">100px</span>
+					</div>
+					
+					<!-- MARGIN -->
+					<div class="form-group form-inline justify-content-center">
+						<div class="input-group extra">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Margin (px)</span>
+							</div>
+							<input type="number" min="0" class="form-control" id="marginSize" value="0">
+						</div>
+					</div>
+
+					<!-- BUTTONS -->
+					<div class="form-group">
+						<div class="row justify-content-center">
+							<button type="button" class="btn-info btn-sm" onclick="generateGrid()">Apply Settings</button>
+							&nbsp;&nbsp;&nbsp;
+							<button type="button" class="btn-success btn-sm" onclick="shuffle()">Shuffle Images</button>
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
-		<script src = "albumart.js"></script>
-		<footer>
-			<div class="row">
-				<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-					<input type="hidden" name="cmd" value="_donations" />
-					<input type="hidden" name="business" value="893MFM6CDTVB6" />
-					<input type="hidden" name="item_name" value="Donate for beer money!" />
-					<input type="hidden" name="currency_code" value="USD" />
-					<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-					<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-				</form>	
+	</div>
+	
+	<div id="myModal" class="modal"  role="dialog" aria-labelledby="Search album">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<!-- Modal title -->
+					<div class="modal-header">
+						<h4 class="modal-title w-100 text-center">Search for an album</h4>
+						<!-- Close button -->
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<!-- Modal body -->
+					<div class="modal-body" id="modalBody">
+						<form id="searchForm">
+							<div class="form-group input-group justify-content-center">
+								<input type="text" class="form-control" id="searchTerm" placeholder="Enter artist and/or album">
+								<div class="input-group-apppend bg-primary">
+									<button class="btn" type="button" onclick="albumsearch()">Search</button>
+								</div>
+							</div>
+						</form>
+						<!-- Filled when user searches for albums -->
+						<div id="albumsFound">
+
+						</div>
+				</div>
 			</div>
-			<div class="row" text-align="center">
-				<b>Feel free to help me out if you enjoyed this tool!</b>
-			</div>
-		</footer>
-	</body>
+		</div>
+	</div>
+	<div>
+		<div id="albums"></div>
+	</div>
+</body>
 	
 	
 </html>
