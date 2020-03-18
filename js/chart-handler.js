@@ -6,9 +6,13 @@
   * changed all var to let, to allow me to reuse the same name for the same values
   * changed lastfm API key (used mine instead of xsaardo's one)
   * changed images ID: from comma to dash (since comma gave problems with jQuery selectors)
+  * Rethinked the general functioning of the code:
+		*	on page load, the chart is created empty: this because lastFM docs suggests not to make a call in the first page (defaultAlbums did that)
+	  *	TO-DO: add a function to generate a random chart, with a better random algorithm
+	  * another function will handle the addition/removal of rows and columns
+
   * FUNCTION DEFAULT ALBUMS: 
-		*	removed it's assignment to a variable, moved on top since it's one the first functions executed
-	  * added title to the image so that when one hovers on it it's displayed: FIX-to-do: when drag and dropping image title isn't correctly managed (since it's related to the id and not to the image)
+		*	removed, to make in the future a better randomChart function
 	*	FUNCTION GENERATEGRID:
 		*	removed it's assignment to a variable
 	  *	moved imageMatrix on Global Vars since var is changed to let (and thus it wasn't recognised outside its block scope)
@@ -20,73 +24,65 @@
 
 // Global Vars
 let initialFlag = 1;
-let modal = $('#myModal');
 let albumArtURL, imageMatrix, curID="";
-let placeholderImg = "img/placeholder.jpg"; // Changed since the old one didn't work, instead of taking it from an URL I decided to include it in the project
+const placeholderImg = "img/placeholder.jpg";
 const lastfm_apikey = "fc796a0c61cb69cccbaccb4706b597e4";
 
 
 // Execute upon page load
 $(window).on('load', function(){
 	generateGrid();
+	resizeImg();
+	changeMargin();
 }); 
 
-// Functions
+
 /********* ALBUM GRID FUNCTIONS *********/
 // Generate grid of img objects
-let generateGrid = function() {
-	// Save current images if not initial site load
-	if (!initialFlag) {
-		let numRows = $("#numRows").val();
-		let numCols = $("#numCols").val();
-		imageMatrix = new Array();
-		let imageRow = new Array();
-		let saveImage = "";
-		for (let i = 0; i < numRows; i++) {
-			for (let j = 0; j < numCols; j++) {
-				saveImage = i.toString() + '-' + j.toString();
-				try {
-					imageRow.push({
-						source: $('#'+saveImage).attr('src'),
-						info: $('#'+saveImage).attr('title')
-					}); // Adding to imageRow array every img's 'src' attribute
-				}
-				catch(err) {
-					imageRow.push(placeholderImg);
-				}
-			}
-			imageMatrix.push(imageRow); // Array of rows
-			imageRow = [];
-		}
+function generateGrid (NR,NC) {
+	let numRows, numCols;
+	// First time called
+	if (initialFlag) {
+		numCols = $("#numCols").val();
+		numRows = $("#numRows").val();
+		initialFlag = 0;
 	}
-	
-	// Grid row/cols
-	let numCols = $("#numCols").val();
-	let numRows = $("#numRows").val();
-	
-	// Image size
-	let imgSize = $("#artsize").val().toString();
-	$('.albumarts').css({ // albumarts class is assigned to every image
-		'height': imgSize + 'px',
-		'width': imgSize + 'px'
+	// If this function is called by modifyGrid
+	else {
+		numRows = NR, numCols = NC;
+	}
+
+	// Image and margin size
+	let imgSize = $("#artSize").val().toString();
+	let marginSize = $("#marginSize").val().toString();
+	// Wait until document is ready before setting the margin
+	$(document).ready(function () {
+		$('img').css('margin', marginSize + 'px');
 	});
-	
-	let id = "", albumHTML = "";  // Init album html block
-	$("#albums").html(""); // Clear out existing albums
-	
-	// Generate HTML for album grid
+
+	let id = "", albumArtsHTML = "", albumNamesHTML = "";  // Init album html block
+	let placeholderTitle = "Not set";
+	$("#albumArts").html(""); // Clear out existing albums
+	// Generate HTML
 	for (i = 0; i < numRows; i++) {
-		albumHTML += '<div class="row"><div align="center" class="col-12">' + '\n';
+		albumArtsHTML += 
+		'<div class="row"> \
+			<div class="d-flex justify-content-center col p-0">' + '\n';
+			// col: to make it change when the albumNames div is shown
+		albumNamesHTML += 
+		'<div class="row" id="albumArtRow"'+i+'> \
+			<div class="d-flex  col p-0">' + '\n' + 
+			'<ul class="list'+i+'">';
 		for (j = 0; j < numCols; j++) {	
 			id = i.toString() + "-" + j.toString();
 			/* For comments on drag functions, see DRAG AND DROP section
-			 * draggable = true makes the image draggable
-			 * ondragstart = what to do when element is dragged? --> call dragStart function: 
-			 * ondragover = event that specifies where the dragged data can be dropped --> call allowDrop function
-			 * ondrop =
-			 * serc = placeholderImg and title = "Not set" will overwrite all the images: the information of previous images will be restored in the second for loop cycle, so at the end the images with placeholder and "Not set" will only be the new rows/cols
-			 */
-			albumHTML += 
+				* draggable = true makes the image draggable
+				* ondragstart = what to do when element is dragged? --> call dragStart function: 
+				* ondragover = event that specifies where the dragged data can be dropped --> call allowDrop function
+				* ondrop =
+				* serc = placeholderImg and title = "Not set" will overwrite all the images: the information of previous images will be restored in the second for loop cycle, so at the end the images with placeholder and "Not set" will only be the new rows/cols
+				*/
+			albumArtsHTML += 
 			'<a data-target="#myModal" data-toggle="modal" onclick="setCurID(event)"> \
 					<img \
 						id="' + id + '" \
@@ -97,45 +93,114 @@ let generateGrid = function() {
 						class="albumarts" \
 						width=' + imgSize + ' height=' + imgSize + 
 						' src=' + placeholderImg +
-						' title="Not set" \
-						 alt=""> \
-			 </a>'; 
+						' title=' + placeholderTitle +
+						'	alt="Album art"> \
+				</a>';
+			albumNamesHTML += 
+			'<li>'+placeholderTitle+'</li>'
 		}
-		albumHTML +=  "</div></div>" + '\n';
+		albumArtsHTML +=  
+		'</div></div>' + '\n';
+		albumNamesHTML +=  
+		'</div></div>' + '\n';
 	}
+	$("#albumArts").html(albumArtsHTML); // Insert HTML in div "albumArts"
+	$("#albumNames").html(albumNamesHTML);
+}
+
+function updateGrid() {
 	
-	$("#albums").html(albumHTML); // Insert HTML in div "albums"
-	
-	// Image Margins (wait til document is ready)
-	let marginSize = $("#marginSize").val();
-	$(document).ready(function () {
-		$('img').css('margin', marginSize + 'px');
-	});
-	
-	// Reinsert previous images
-	if (!initialFlag) {
-		for (i = 0; i < numRows; i++) {
-			imageRow = imageMatrix[i];
-			for (j = 0; j < numCols; j++) {
-				selectedImg = i.toString() + '-' + j.toString();
-				try { // Restore saved info
-					$('#' + selectedImg).attr({
-						'src': imageRow[j].source,
-						'title': imageRow[j].info
-					});
-				}
-				catch(err) {}
+	let imageMatrix = new Array();
+	let imageRow = new Array();
+	let saveImage = "";
+	let numRows = $("#numRows").val();
+	let numCols = $("#numCols").val();
+
+	// Save current images
+	for (let i = 0; i < numRows; i++) {
+		for (let j = 0; j < numCols; j++) {
+			saveImage = i.toString() + '-' + j.toString();
+			try {
+				imageRow.push({
+					source: $('#'+saveImage).attr('src'),
+					info: $('#'+saveImage).attr('title')
+				}); // Adding to imageRow array every image's src and title attributes
+			}
+			catch(err) {
+				imageRow.push(placeholderImg);
 			}
 		}
+		imageMatrix.push(imageRow); // Array of rows
+		imageRow = [];
 	}
-	else { // This is called the first time since initialFlag will be 1
-		defaultAlbums();
+		
+	generateGrid(numRows,numCols); //Regenerate grid
+
+	// Reinsert images
+	for (let i = 0; i < numRows; i++) {
+		imageRow = imageMatrix[i];
+		for (let j = 0; j < numCols; j++) {
+			selectedImg = i.toString() + '-' + j.toString();
+			try { // Restore saved info
+				$('#' + selectedImg).attr({
+					'src': imageRow[j].source,
+					'title': imageRow[j].info
+				});
+			}
+			catch(err) {}
+		}
 	}
-	initialFlag = 0; // To make it evaluate to false the next time
+}
+
+
+function resizeImg() {
+	$("#artSize").on("input change", function() {
+    let size = $(this).val().toString();
+		// Write current size nrea input
+    $("#artSizeVal").text(size + 'px');
+		// Dynamically change size
+		$('.albumarts').attr({
+			'width' : size+'px',
+			'height' : size+'px'
+		});
+	});
+}
+
+function changeMargin() {
+	$("#marginSize").on("input change", function() {
+		let size = $(this).val().toString();
+		// Write current size nrea input
+		$("#marginSizeVal").text(size + 'px');
+		// Dynamically change size
+		$('.albumarts').css('margin',size+'px');
+	});
+}
+
+
+// Shuffle images around
+let shuffle = function() {
+	let img1, img2;
+	let selectedImg1, selectedImg2;
+	let i,j,ii,jj;
+	let numCols = $("#numCols").val();
+	let numRows = $("#numRows").val();
+	
+	for (let k = 0; k < 60; k++) {
+		j = Math.round(Math.random()*(numCols-1));
+		i = Math.round(Math.random()*(numRows-1));
+		jj = Math.round(Math.random()*(numCols-1));
+		ii = Math.round(Math.random()*(numRows-1));
+		selectedImg1 = i.toString() + "-" + j.toString();
+		selectedImg2 = ii.toString() + "-" + jj.toString();
+		img1 = document.getElementById(selectedImg1).src;
+		img2 = document.getElementById(selectedImg2).src;
+		document.getElementById(selectedImg1).src = img2;
+		document.getElementById(selectedImg2).src = img1;
+	}
 };
 
-// Generate random albums (executed on the first page load)
-function defaultAlbums() {
+// TO-DO: improve this function
+function randomChart() {
 	let numCols = $("#numCols").val();
 	let numRows = $("#numRows").val();
 	let artSource, selectedImg;
@@ -163,30 +228,10 @@ function defaultAlbums() {
 	});
 }
 
-// Shuffle images around
-let shuffle = function() {
-	let img1, img2;
-	let selectedImg1, selectedImg2;
-	let i,j,ii,jj;
-	let numCols = document.getElementById("numCols").value;
-	let numRows = document.getElementById("numRows").value;
-	
-	for (let k = 0; k < 60; k++) {
-		j = Math.round(Math.random()*(numCols-1));
-		i = Math.round(Math.random()*(numRows-1));
-		jj = Math.round(Math.random()*(numCols-1));
-		ii = Math.round(Math.random()*(numRows-1));
-		selectedImg1 = i.toString() + "-" + j.toString();
-		selectedImg2 = ii.toString() + "-" + jj.toString();
-		img1 = document.getElementById(selectedImg1).src;
-		img2 = document.getElementById(selectedImg2).src;
-		document.getElementById(selectedImg1).src = img2;
-		document.getElementById(selectedImg2).src = img1;
-	}
-};
+
 
 /********* MODAL FUNCTIONS *********/
- function albumsearch() {
+ function albumSearch() {
 	$('#searchTerm').focus();
 	let searchterm = $('#searchTerm').val();
 	let albumHTML = ""; // Init album html block
@@ -203,7 +248,13 @@ let shuffle = function() {
 					albumArtURL = placeholderImg;
 					albumArtInfo = "Image not available"
 				}
-				albumHTML += '<img width=100 height=100 style="margin: 1px;" src="' + albumArtURL + '" title="' + albumArtInfo + '" onclick="chooseIMG(this)">';
+				albumHTML += 
+				'<img width=100 height=100 style="margin: 1px;" \
+						src="' + albumArtURL + 
+						'" title="' + albumArtInfo + 
+						'" onclick="chooseIMG(this)" \
+						alt="Album art" \
+				 >';
 				k++;
 			}
 			albumHTML += "</div></div>" + '\n';
@@ -229,7 +280,7 @@ let chooseIMG = function(url) {
 	$('#myModal').modal('hide'); // Hide modal after insertion
 };
 
-/********* DRAG AND DROP *********/
+/********* DRAG&DROP FUNCTIONS *********/
 function dragStart (event) { 
 	// Specify what data to be dragged: in this case, the value of id (which has a text type) of the draggable element
 	event.dataTransfer.setData("text",event.target.id); 

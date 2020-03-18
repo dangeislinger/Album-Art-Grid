@@ -1,5 +1,5 @@
-﻿body {
-	overflow-x: hidden;
+﻿html {
+	width: 100%;
 }
 
 img:hover {
@@ -7,15 +7,23 @@ img:hover {
 	cursor: pointer;
 }
 
-#albums {
+#chartContainer {
 	background-color: black;
 }
 
-
-div.form-inline > .input-group {
-	width: 120px;
+/* Hide list until user clicks on button */
+#albumNames {
+	display: block; 
 }
 
-div.form-inline > .input-group.extra {
-	width: 170px;
+#numRows, #numCols {
+	width: 50px;
+}
+
+.row {
+	margin: 0px;
+}
+
+.input-group-fixed {
+	width: 150px;
 }
