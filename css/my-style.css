@@ -1,6 +1,28 @@
-﻿html {
+﻿/* Style fo when the user disables JS, copied from*/
+
+body {
+	position: relative;
+}
+
+.noscript {
+	width: 100%;
+	height: 100%; /* will cover the text displayed when JS is enabled*/
+	z-index: 10;
+	position: absolute;
+}
+
+#nojs {
+	display: block;
+	height: 100%;
+	background-color: white;
+}
+
+/* Normal style */
+
+html {
 	width: 100%;
 }
+
 
 img:hover {
 	opacity: 0.7;
@@ -9,21 +31,31 @@ img:hover {
 
 #chartContainer {
 	background-color: black;
+	color: white;
+	text-align: center;
+	font-size: 12px;
+	margin: 0 auto; /* Center chart container in the page */
+	width: max-content; /* Make the container grow if it has to */
 }
 
 /* Hide list until user clicks on button */
-#albumNames {
-	display: block; 
+#showAlbumNamesOptions, #albumNames, .card-footer-span {
+	display: none;
 }
 
+/* Makes the number visible */
 #numRows, #numCols {
-	width: 50px;
+	width: 60px;
 }
 
-.row {
-	margin: 0px;
+/* Overwriting bootstrap default */
+.card {
+	background-color: transparent;
+	border: none;
 }
 
-.input-group-fixed {
-	width: 150px;
+/* To center the text in the span */
+.card-footer-span {
+	margin: auto;
+	width: max-content;
 }

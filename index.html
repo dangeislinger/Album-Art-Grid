@@ -1,5 +1,5 @@
-﻿
-<html lang="en">
+﻿<!--  -->
+<html lang="en" class="m-2">
 
 <head>
 	<title>Music Chart Maker</title>
@@ -15,12 +15,11 @@
 			crossorigin="anonymous" /> 
 	<!-- OPEN ICONIC 1.1.1 -->
 	<link rel="stylesheet" 
-				href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic.min.css" 
+				href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic.min.css"
 				integrity="sha256-CfN2r6i/dqkUHVRqpBzO3w21SnIWalwGfj5ScBPVzmI=" 
 				crossorigin="anonymous" />
 	<link type="text/css" rel="stylesheet" href="css/my-style.css">
 	<link type="text/css" rel="stylesheet" href="css/bootstrap-colorpicker.min.css">
-	
 
 	<!-- JS -->
 	<!-- JQUERY 3.4.1 -->
@@ -45,11 +44,16 @@
 	<script src = "js/bootstrap-colorpicker.min.js"></script>
 	<!-- MYSCRIPTS -->
 	<script src = "js/chart-handler.js"></script>
-	<script src = "js/my-scripts.js"></script>
-		
 </head>
 	
-<body class="bg-dark"> 
+<body class="bg-dark mx-3"> 
+	<!-- Handle no Javascriot -->
+	<noscript class="noscript">
+		<div id="nojs" class="bg-dark text-white text-center">
+			<h1>You must enable Javascript to use this site's functionalities</h1>
+		</div>
+	</noscript>
+
 	<div class="container-fluid">
 	<div class="row" id="jumbotron-container">
 	<!-- Jumbotron with title and instruction -->
@@ -63,7 +67,7 @@
 		<br />
 
 		<!-- SETTINGS FORM -->
-		<div class="row d-flex justify-content-center mt-3" id="settings">
+		<div class="col-12 d-flex justify-content-center mt-3" id="settings">
 			<form class="mb-0 col-11 justify-content-center">
 				<!-- IMAGE-BG -->
 				<div class="form-group">
@@ -92,14 +96,16 @@
 				<!-- BG COLOR/TEXT COLOR -->
 				<div class="form-group form-inline justify-content-center flex-nowrap">
 				<!-- BG -->
-					<div id="bgColorPicker" class="input-group mx-3 justify-content-center">
-						<!-- 
-							input-group-prepend/append: adds the span at the beginning/ending 
-							justify-content-center on it since the input type is hidden
-						-->
-						<div class="input-group-prepend ">
+					<div class="input-group mx-3 justify-content-center">
+						<!-- input-group-prepend/append: adds the span at the beginning/ending -->
+						<div class="input-group-prepend" id="bgColorPicker">
 								<span class="input-group-text">BG color</span>
 								<span class="input-group-text colorpicker-input-addon"><i></i></span>
+						</div>
+						<input type="text" class="form-control" hidden/>
+						<div class="input-group-prepend" id="textColorPicker">
+								<span class="input-group-text colorpicker-input-addon"><i></i></span>
+								<span class="input-group-text">Text color</span>
 						</div>
 						<input type="text" class="form-control" hidden/>
 					</div>
@@ -108,7 +114,7 @@
 				<!-- COL/ROW NUMBER -->
 				<div class="form-group form-inline justify-content-center flex-nowrap" id="colrow">
 					<!-- Cols -->
-					<div class="input-group input-group-fixed mx-4 flex-nowrap">
+					<div class="input-group mx-4 flex-nowrap">
 						<!-- Description and minus button -->
 						<div class="input-group-prepend">
 							<span class="input-group-text">Cols</span>
@@ -116,8 +122,8 @@
 								<span class="oi" data-glyph="minus"></span>
 							</button>
 						</div>
-						<!-- Input -->
-						<input type="number" min="1" class="form-control text-center" id="numCols" value="3" disabled/>
+						<!-- Input: text-right to actually center it (I know, it doesn't make sense) -->
+						<input type="number" min="1" class="form-control text-right" id="numCols" value="3" disabled/>
 						<!-- Plus button -->
 						<div class="input-group-append">
 							<button class="btn btn-success btn-increase p-1" data-target="numCols" type="button">
@@ -127,7 +133,7 @@
 					</div>
 
 					<!-- Rows -->
-					<div class="input-group input-group-fixed mx-4 flex-nowrap">
+					<div class="input-group mx-4 flex-nowrap">
 						<!-- Description and minus button -->
 						<div class="input-group-prepend">
 							<span class="input-group-text">Rows</span>
@@ -136,7 +142,7 @@
 							</button>
 						</div>
 						<!-- Input -->
-						<input type="number" min="1" class="form-control text-center" id="numRows" value="3" disabled/>
+						<input type="number" min="1" class="form-control text-right" id="numRows" value="3" disabled/>
 						<!-- Plus button -->
 						<div class="input-group-append">
 							<button class="btn btn-success btn-increase p-1" data-target="numRows" type="button">
@@ -157,18 +163,27 @@
 					<!-- Margin -->
 					<div class="ml-2 flex-nowrap">
 						<label for="marginSize" class="control-label col-form-label">Margin</label>
-						<input type="range" class="form-control p-0" min="0" max="3" step="0.5" id="marginSize" value="1">
+						<input type="range" class="form-control p-0" min="0" max="5" step="0.5" id="marginSize" value="1">
 						<span id="marginSizeVal">1px</span>
 					</div>
 				</div>
-
 
 				<!-- BUTTONS -->
 				<div class="form-group">
 					<div class="row justify-content-center text-white">
 						<button type="button" class="btn-success btn-sm mx-2" onclick="shuffle()">Shuffle</button>
 						<!-- When clicked -->
-						<button id="showHideNames" type="button" class="btn-warning btn-sm mx-2">Show album names (TO-DO)</button>
+						<button id="showAlbumNames" type="button" class="btn-warning btn-sm mx-2">Show album names</button>
+						<div id="showAlbumNamesOptions">
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio" name="showAlbumNamesOptions" id="showAlbumNamesBelow" checked>
+								<label class="form-check-label" for="showAlbumNamesBelow">Below</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio" name="showAlbumNamesOptions" id="showAlbumNamesRight">
+								<label class="form-check-label" for="showAlbumNamesRight">Right (WIP)</label>
+							</div>
+						</div>
 					</div>
 				</div>
 			</form>
@@ -177,7 +192,7 @@
 	</div>
 
 	<!-- CHART -->
-	<div class="row flex-nowrap" id="chartContainer">
+	<div class="row flex-nowrap p-3" id="chartContainer">
 		<div class="col" id="albumArts"></div>
 		<div class="col-3" id="albumNames"> </div>
 	</div>
@@ -188,7 +203,7 @@
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<!-- Modal title -->
-					<div class="modal-header">
+					<div class="modal-header p-1">
 						<h4 class="modal-title w-100 text-center">Search for an album</h4>
 						<!-- Close button -->
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -196,17 +211,17 @@
 						</button>
 					</div>
 					<!-- Modal body -->
-					<div class="modal-body" id="modalBody">
-						<form id="searchForm">
-							<div class="form-group input-group justify-content-center">
+					<div class="modal-body p-1" id="modalBody">
+						<form id="searchForm" class="d-flex justify-content-center mb-2">
+							<div class="form-group input-group m-0 w-75">
 								<input type="text" class="form-control" id="searchTerm" placeholder="Enter artist and/or album">
-								<div class="input-group-apppend bg-primary">
+								<div class="input-group-append bg-primary">
 									<button class="btn" type="button" onclick="albumSearch()">Search</button>
 								</div>
 							</div>
 						</form>
 						<!-- Filled when user searches for albums -->
-						<div id="albumsFound">
+						<div id="albumsFound" class="justify-content-center">
 
 						</div>
 				</div>
@@ -214,6 +229,4 @@
 		</div>
 	</div>
 </body>
-	
-	
 </html>
