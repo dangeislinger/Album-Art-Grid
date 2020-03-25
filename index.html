@@ -76,10 +76,10 @@
 								<span class="input-group-text">BG image URL</span>
 						</div>
 						<!-- Input for image URL -->
-						<input class="" type="url" id="bgImageURL"/>
+						<input class="" type="url" id="bgImageUrl"/>
 						<div class="input-group-append">
 							<!-- SET button -->
-							<button class="btn bg-primary" type="button" onclick="setBgImage()">Set</button>
+							<button class="btn bg-primary" type="button" id="setBgImageButton">Set</button>
 							<!-- Repeat? + Checkbox -->
 							<span class="input-group-text">
 								<label for="repeatBgImgCheckbox" class="m-0">
@@ -162,7 +162,7 @@
 					</div>
 					<!-- Margin -->
 					<div class="ml-2 flex-nowrap">
-						<label for="marginSize" class="control-label col-form-label">Margin</label>
+						<label for="marginSize" class="control-label col-form-label">Gutter</label>
 						<input type="range" class="form-control p-0" min="0" max="5" step="0.5" id="marginSize" value="1">
 						<span id="marginSizeVal">1px</span>
 					</div>
@@ -181,7 +181,18 @@
 							</div>
 							<div class="form-check form-check-inline">
 								<input class="form-check-input" type="radio" name="showAlbumNamesOptions" id="showAlbumNamesRight">
-								<label class="form-check-label" for="showAlbumNamesRight">Right (WIP)</label>
+								<label class="form-check-label" for="showAlbumNamesRight">Right</label>
+							</div>
+							<!-- pl-0: to align the start of text to above buttons and labels -->
+							<div id="showAlbumNamesRightOptions">
+								<div class="form-check form-check-inline">
+									<input class="form-check-input" type="radio" name="showAlbumNamesRightOptions" id="showAlbumNamesRightSpace" checked>
+									<label class="form-check-label" for="showAlbumNamesRightSpace">Space</label>
+								</div>
+								<div class="form-check form-check-inline">
+									<input class="form-check-input" type="radio" name="showAlbumNamesRightOptions" id="showAlbumNamesRightCenter">
+									<label class="form-check-label" for="showAlbumNamesRightCenter">Center</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -194,7 +205,8 @@
 	<!-- CHART -->
 	<div class="row flex-nowrap p-3" id="chartContainer">
 		<div class="col" id="albumArts"></div>
-		<div class="col-3" id="albumNames"> </div>
+		<!-- These classes make the title centered independently from its size -->
+		<div class="col flex-column align-items-center" id="albumNames"> </div>
 	</div>
 </div> <!-- Container div -->
 

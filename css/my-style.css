@@ -33,13 +33,15 @@ img:hover {
 	background-color: black;
 	color: white;
 	text-align: center;
-	font-size: 12px;
-	margin: 0 auto; /* Center chart container in the page */
+	font-size: 14px;
 	width: max-content; /* Make the container grow if it has to */
+	margin: 0 auto; /* Center chart container in the page */
 }
 
-/* Hide list until user clicks on button */
-#showAlbumNamesOptions, #albumNames, .card-footer-span {
+/* Hide various elements until user clicks on the proper button/checkbox/radio */
+#showAlbumNamesOptions, #showAlbumNamesRightOptions,
+#albumNames,
+.card-footer-span {
 	display: none;
 }
 
@@ -56,6 +58,12 @@ img:hover {
 
 /* To center the text in the span */
 .card-footer-span {
-	margin: auto;
+	width: max-content;
+	margin: 0 auto;
+}
+
+ul {
+	list-style: none;
+	/* Allow long names not to wrap */
 	width: max-content;
 }

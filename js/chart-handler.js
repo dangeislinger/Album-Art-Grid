@@ -1,39 +1,18 @@
 /**  
- * Modifications made to the original code:
-	* added comments to specify what I didn't know: since my knowledge on JS, Query and API is limited they'll help me (and hope they'll help anyone who'll work on this in the future)
-  * "jQuerified" the code (I have to learn it even if it's hated, sorry)
-  * changed all var to let, to allow me to reuse the same name for the same values
-  * changed lastfm API key (used mine instead of xsaardo's one)
-  * changed images ID: from comma to dash (since comma gave problems with jQuery selectors)
-  * added page for users with JS disabled
-  * Rethinked the general functioning of the code:
-		*	on page load, the chart is created empty: this because lastFM docs suggests not to make an API call on first page load (defaultAlbums did that)
-		* another function (updateGrid) will handle the addition/removal of rows and columns
-		* TODO:  add a function to generate a random chart, with a better random algorithm
-
-  * FUNCTION DEFAULT ALBUMS: 
-		*	TODO: removed, to make in the future a better randomChart function
-	  
-	*	FUNCTION GENERATEGRID:
-		*	removed it's assignment to a variable
-	  *	moved imageMatrix on Global Vars since var is changed to let (and thus it wasn't recognised outside its block scope)
-	  *	changed the function to also save/restore title (as 'Artist - Album')
-	  *	changed the image saved: extra-large (300px) instead of large() TO-DO: force the user to select an image between 100 (default) and 300 pixel
-	  *	this function now generates a row of card with image inside and footer for artist and album information
-	  
-	*	DRAG AND DROP:
-		* now this function also handles the title of the swapped images
-
-	* TODO: make canvas
-			let canvasArea = document.getElementById("albums");
-			let t = canvasArea.getContext('2d');
-			window.open('', document.getElementById('albums').toDataURL());
+ * TODO:  add a function to generate a random chart, with a better random algorithm
+ * TODO: make image downloadable
+ * TODO: save current status in session
+ * TODO: improve shuffle function
 */
 
-// Global Vars
+// Global variables/constants/flags
 let albumArtURL, curID="";
+let firstTime = true, 
+		showAlbumNames = false, 
+		showAlbumNamesBelow = false, 
+		showAlbumNamesRight = false
+		showAlbumNamesRightOptions = false;
 const lastfm_apikey = "fc796a0c61cb69cccbaccb4706b597e4";
-let initialFlag = true, showAlbumNames = false, showAlbumNamesBelow = false, showAlbumNamesRight = false;
 const placeholderImg = "img/placeholder.jpg";
 
 // Shows albums found in modal 
@@ -98,17 +77,6 @@ function changeBgColor () {
     }); 
 }
 
-// Change card margin
-function changeMargin() {
-	$("#marginSize").on("input change", function() {
-		let size = $(this).val().toString();
-		// Write current size nrea input
-		$("#marginSizeVal").text(size + 'px');
-		// Dynamically change size
-		$('.card').css('margin',size+'px');
-	});
-}
-
 // Change #chartContainer text color
 function changeTextColor () {
   //setting initial color
@@ -123,24 +91,48 @@ function changeTextColor () {
 }
 
 // Monitors the radio buttons status and shows the 
-function checkRadioButtonsStatus() {
+function checkRadioButtonsBelowRightStatus() {
 	if (showAlbumNames) {
+		// Below is checked
 		let belowChecked = $('#showAlbumNamesBelow').prop('checked');
 		if (belowChecked) {
 			$('.card-footer-span').css('display', 'block');
 			$('#albumNames').css('display', 'none');
 			showAlbumNamesBelow = true;
-			showAlbumNamesRight = false;
+			showAlbumNamesRight = false;	
 		}
+		// Right is checked
 		else {
-			$('#albumNames').css('display', 'block');
+			$('#albumNames').css('display', 'flex');
 			$('.card-footer-span').css('display', 'none');
 			showAlbumNamesBelow = false;
 			showAlbumNamesRight = true;
 		}
+		showHideAlbumNamesRightOptions();
 	}
 	else {
 		$('#albumNames, .card-footer-span').css('display', 'none');
+	}
+}
+
+// Check which one of the space/around option is checked, and change things based on it
+function checkRadioButtonsCenterSpaceStatus() {
+	if (showAlbumNames && showAlbumNamesRight) {
+		// Space is checked
+		let spaceChecked = $('#showAlbumNamesRightSpace').prop('checked');
+		if (spaceChecked) {
+			$('#albumNames > div > ul').each(function() {
+				$(this).removeClass('justify-content-center');
+				$(this).addClass('justify-content-around');
+			});
+		}
+		// Around is checked
+		else {
+			$('#albumNames > div > ul').each(function() {
+				$(this).removeClass('justify-content-around');
+				$(this).addClass('justify-content-center');
+			});
+		}
 	}
 }
 
@@ -160,8 +152,9 @@ function chooseIMG (image) {
 	setCardWidth();
 };
 
-// Specify which data to drag: in this case, the value of id attribute (text type) of the dragged element
+// Specify which data to dra 
 function dragStart(event) { 
+	// In this case, the value of id attribute (text type) of the dragged element
 	event.dataTransfer.setData("text",event.target.id); 
 }
 
@@ -191,43 +184,63 @@ function drop(event) {
 	event.target.title = initialImg.title;
 	event.target.dataset.artist = initialImg.artist;
 	event.target.dataset.album = initialImg.album;
-	// Update the card footer text
+	// Update the card footer text and the name on the right 
 	setCardFooterText();
+	showNamesRight();
 }
 
+// Listen to various events
 function eventListener() {
 	// Listen to change radio button
 	$('input[type=radio]').change(function(){ 
-		checkRadioButtonsStatus();
-		// If the user selected to show the text on the right there's no more need to keep the old card width value
+		checkRadioButtonsBelowRightStatus();
+		checkRadioButtonsCenterSpaceStatus();
+		// Set card width (if needed, the function will determine it)
 		setCardWidth();
 	});
 	// Listen to #artSize input change
-	$('#artSize').on("input change", setCardWidth);
+	$('#artSize').on("input change", function() {
+		let imageSize = $(this).val();
+		setImageSize(imageSize);
+		setCardWidth()
+	});
+	// Listen to #marginSize input change
+	$('#marginSize').on("input change", function() {
+		let marginValue = $(this).val();
+		setMargin(marginValue);
+	});
 	// Listen to #showAlbumNames button click
 	$('#showAlbumNames').click(function() {
 		// Check radio button status and 
-		checkRadioButtonsStatus();
+		checkRadioButtonsBelowRightStatus();
+		checkRadioButtonsCenterSpaceStatus();
 		// Set card width (if needed, the function will determine it)
 		setCardWidth();
 	});
 	// Increase/decrease button click listener
 	$('.btn-increase, .btn-decrease').click(function () {
-		checkRadioButtonsStatus(); // Check status of radio buttons to display/not display titles, in the correct position
+		checkRadioButtonsBelowRightStatus(); // Check status of radio buttons to display/not display titles, in the correct position
 		// Set card width (if needed, the function will determine it)
+		checkRadioButtonsCenterSpaceStatus();
 		setCardWidth();
 	});
+	// Listen to #setBgImageButton button click
+	$('#setBgImageButton').click(setBgImage);
+	// Listen to #repeatBgImgCheckbox checkbox status
+	$('#repeatBgImgCheckbox').click(function() {
+		let isChecked = $(this).is(":checked");
+		repeatBgImg(isChecked);
+	});
 }
-
 
 // Generate grid of img objects
 function generateGrid (NR,NC) {
 	let numRows, numCols;
 	// First time called
-	if (initialFlag) {
+	if (firstTime) {
 		numCols = $("#numCols").val();
 		numRows = $("#numRows").val();
-		initialFlag = false;
+		firstTime = false;
 	}
 	// If this function is called by updateGrid
 	else {
@@ -242,7 +255,7 @@ function generateGrid (NR,NC) {
 		$('.card').css('margin', marginSize + 'px');
 	});
 
-	let id = "", albumArtsHTML = "",  albumNamesHTML = "";  // Init album html block
+	let id = "", idlist="", albumArtsHTML = "",  albumNamesHTML = "";  // Init album html block
 	let placeholderTitle = "Not set";
 	$("#albumArts").html(""); // Clear out existing albums
 	$("#albumArtsNames").html(""); // Clear out existing names
@@ -250,17 +263,17 @@ function generateGrid (NR,NC) {
 	for (i = 0; i < numRows; i++) {
 		albumArtsHTML += '<div class="row d-flex flex-nowrap justify-content-center">' + '\n';
 		albumNamesHTML += 
-		'<div class="row" id="albumArtRow'+i+'"> \
-			<div class="col p-0">' + '\n' + 
-			'<ul class="list'+i+'">';
+		'<div class="row">' + '\n' + 
+			'<ul class="mb-0 ml-3 p-0 d-flex flex-column">';
+			// Removes padding and only add margin to the left (to outdistance it from the last albumArt column)
 		for (j = 0; j < numCols; j++) {	
 			id = i.toString() + "-" + j.toString();
-			/* For comments on drag functions, see DRAG AND DROP section
+			/* albumArtsHTML attributes explained:
 				* draggable = true makes the image draggable
-				* ondragstart = what to do when element is dragged? --> call dragStart function: 
-				* ondragover = event that specifies where the dragged data can be dropped --> call allowDrop function
-				* ondrop =
-				* serc = placeholderImg and title = "Not set" will overwrite all the images: the information of previous images will be restored in the second for loop cycle, so at the end the images with placeholder and "Not set" will only be the new rows/cols
+				* ondragstart = what to do when element is dragged?
+				* ondragover = event that specifies where the dragged data can be dropped
+				* ondrop = what to do when element is dropped?
+				* src = placeholderImg and title = "Not set" will overwrite all the images: the information of previous images will be restored in the second for loop cycle, so at the end the images with placeholder and "Not set" will only be the new rows/cols (and those who already had these attributes' values)
 			*/
 			albumArtsHTML += 
 			'<div class="card"> \
@@ -281,13 +294,14 @@ function generateGrid (NR,NC) {
 				</a> \
 				<span class="card-footer-span"></span>' +
 			'</div>';
+			idlist = i.toString() + "_" + j.toString();
 			albumNamesHTML += 
-			'<li>'+placeholderTitle+'</li>'
+			'<li id="' + idlist + '">'+placeholderTitle+'</li>'
 		}
 		albumArtsHTML +=  
 		'</div>' + '\n';
 		albumNamesHTML +=  
-		'</div></div>' + '\n';
+		'</div>' + '\n';
 	}
 	$("#albumArts").html(albumArtsHTML); // Insert HTML in div "albumArts"
 	$("#albumNames").html(albumNamesHTML);
@@ -325,13 +339,14 @@ function modalAutofocus() {
 }
 
 function preventFormReload() {
-  // Prevent page reload if user presses Enter key in the search form (inside modal), call albumSearch function instead
+  // Prevent page reload when user presses enter in modal search bar
 	$('#searchTerm, .form-control').on('keyup keypress', function(e) {
-		let keyCode = e.keyCode || e.which;
+		// Since jQuery standardizes things only which is needed 
+		let keyCode = e.which;
+		// Key = enter (normal or numpad one)
 		if (keyCode === 13) { 
 			e.preventDefault();
-			albumSearch();
-			return false;
+			albumSearch(); // Call proper function instead
 		}
 	});
 }
@@ -365,35 +380,17 @@ function randomChart() {
 	});
 }
 
-// Repeat/don't repeat background image when user clicks on #repeatBgImgCheckbox
-function repeatBgImg() {
-	let checkboxId = "#repeatBgImgCheckbox";
-	$(checkboxId).click(function () {
-    let isChecked = $(checkboxId).is(":checked");
+// Repeat/don't repeat background image based on user choice
+function repeatBgImg(isChecked) {
   if (isChecked)
-    $('#albumArts').css('background-repeat', 'repeat');
+    $('#chartContainer').css('background-repeat', 'repeat');
   else 
-    $('#albumArts').css('background-repeat', 'no-repeat');
-  });
-}
-
-// Resize image when user changes #artSize value
-function resizeImg() {
-	$("#artSize").on("input change", function() {
-    let size = $(this).val().toString();
-		// Write current size nrea input
-    $("#artSizeVal").text(size + 'px');
-		// Dynamically change size
-		$('.albumarts').attr({
-			'width' : size+'px',
-			'height' : size+'px'
-		});
-	});
+    $('#chartContainer').css('background-repeat', 'no-repeat');
 }
 
 // Set background image
 function setBgImage() {
-  let imgUrl = $("#bgImageURL").val();
+  let imgUrl = $("#bgImageUrl").val();
   $('#chartContainer').css({
     'background-image': 'url(' + imgUrl + ')',
     'background-repeat': 'no-repeat',
@@ -411,58 +408,26 @@ function setCardFooterText() {
 		let artist = $(this).find('img').attr('data-artist');
 		let album = $(this).find('img').attr('data-album');
 		spanText = artist + '<br/>' + album;
-		// Set them to be the span content (that will be editable)
+		// Set them to be the span text
 		$(this).children('span').html(spanText);
-		// Set the content editable, but only if the 
-		if (artist !== "Not set") {
-			$(this).children('span').attr('contenteditable','true');
-		}
   });
 }
 
 
 function setCardWidth() {
-	// Image #0-0 will always exist
-	let currentAlbumArtWidth = parseInt($('#0-0').attr('width'));
+	// Get the current album art width
+	let currentAlbumArtWidth = $('#artSize').val();
+	// Default value
 	let properWidthValue = currentAlbumArtWidth;
-	// This function has only meaning if user is showing album names below the image
+	// The user wants to show  album names below
 	if (showAlbumNames && showAlbumNamesBelow) {
-		let cardWidth = new Array(), spanWidth= new Array();
-		// Push every card and span width to the proper array
-		$('.card').each(function(){
-			cardWidth.push($(this).outerWidth());
-			spanWidth.push($(this).children(".card-footer-span").outerWidth());
-		});
-		// ... = spread operator, it'll "dismember" the array elements and pass them as singular parameters
-		let maxCardWidth = Math.max(...cardWidth);
-		let maxSpanWidth = Math.max(...spanWidth);
-
-		// Case 1: maxSpanWidth is greater than maxCardWidth --> set properWidth to it
-		if (maxSpanWidth > maxCardWidth) {
-			properWidthValue = maxSpanWidth;
-		}
-		// Case 2: maxSpanWidth is lower than maxCardWidth --> set properWidth to currentAlbumArtWidth
-		else if (maxSpanWidth < maxCardWidth) {
-			if (currentAlbumArtWidth < maxSpanWidth) {
-				properWidthValue = maxSpanWidth;
-			}
-			else {
-				properWidthValue = currentAlbumArtWidth;
-			}
-		}
-		// If maxSpanWidth == maxCardWidth
-		else {
-			if (currentAlbumArtWidth < maxSpanWidth)
-				properWidthValue = maxSpanWidth;
-			else 
-				properWidthValue = currentAlbumArtWidth;
-		}
-		//! LOG
-		console.log("------------------------------------------\n" +
-									"maxSpan: " + maxSpanWidth + ", maxCard: " + maxCardWidth + 
-									"\ncurrentArtWidth: " + currentAlbumArtWidth + ", properWidth: " + properWidthValue +
-									"\n------------------------------------------");
-		// Set this to every other elements
+		properWidthValue = showNamesBelow(currentAlbumArtWidth);
+		$('.card').css('width',properWidthValue+'px');
+	}
+	// The user wants to show  album names right
+	else if (showAlbumNames && showAlbumNamesRight) {
+		showNamesRight(); // Show names on the rigth
+		verticalAlignNames(); // Vertical align list items to the corresponding row, and vice versa
 		$('.card').css('width',properWidthValue+'px');
 	}
 	// Set the card width to the currentAlbumArtWidth
@@ -471,13 +436,46 @@ function setCardWidth() {
 	}
 }
 
+// Set image size on the fly
+function setImageSize(value) {
+	let size = value.toString();
+	// Write current size nrea input
+	$("#artSizeVal").text(size + 'px');
+	// Dynamically change size
+	$('.albumarts').attr({
+		'width' : size+'px',
+		'height' : size+'px'
+	});
+}
+
+// Change card margin
+function setMargin(value) {
+	let size = value.toString();
+	// Write current size nrea input
+	$("#marginSizeVal").text(size + 'px');
+	// Dynamically change margin of card
+	$('.card').css('margin',size+'px');
+	// Dynamically change margin of ul too, this to make the covers to properly center to it
+	$('#albumNames > div.row > ul').css({
+		'margin-top': size+'px',
+		'margin-bottom': size+'px'
+	});
+}
 
 // Keeps track of which element has been clicked, to set the new image to it
-function setCurID (event) { 
+function setCurID(event) { 
 	curID = event.target.id;
 }
 
-// Show/hide radio buttons options
+// Set #albumArts or #albumNames rows height
+function setRowHeight(containerId,value) {
+	// Both containers have .row inside, and for each of these the height must be changed to the proper value
+	$(containerId + ' > .row').each(function () {
+		$(this).height(value);
+	});
+}
+
+// Show/hide Below/Right radio buttons
 function showHideAlbumNamesOptions() { 
   $('#showAlbumNames').click(function () {
 		// Show/hide radio buttons
@@ -494,9 +492,91 @@ function showHideAlbumNamesOptions() {
 			// Hide album names
 			$('.card-footer-span').css('display', 'none');
 			$('#albumNames').css('display', 'none');
-			showAlbumNames = false; // Set flag to false
+			// Set flags to false
+			showAlbumNames = false,
+			showAlbumNamesBelow = false,
+			showAlbumNamesRight = false;
 		}
   });
+}
+
+function scaleChart() {
+	windowWidth = 3;
+}
+
+// Show/hide Center/Space radio buttons if Right is checked
+function showHideAlbumNamesRightOptions() {
+	if (showAlbumNames && showAlbumNamesRight) {
+		// Show album options for right
+		showAlbumNamesRightOptions = true;
+		$('#showAlbumNamesRightOptions').css('display','block');
+	}
+	else {
+		$('#showAlbumNamesRightOptions').css('display','none');
+		showAlbumNamesRightOptions = false;
+		// Clean class assignment that could have been set  when the user wanted to show album names on right, clean fixed height that would mess things up when the user resizes things if below is selected
+		$('.card').removeClass('justify-content-center justify-content-around');
+		$('#albumArts > div.row').css('height','auto');
+	}
+}
+
+function showNamesBelow(currentAlbumArtWidth) {
+	let cardWidth = new Array(), spanWidth = new Array();
+	// Push every card and span width to the proper array (Math.ceil to have integer values, to avoid problems with sizes differing by 0.01)
+	$('.card').each(function(){
+		cardWidth.push(Math.ceil($(this).width()));
+		spanWidth.push(Math.ceil($(this).children(".card-footer-span").width()));
+	});
+
+	// ... = spread operator, it'll "dismember" the array elements and pass them as parameters
+	let maxCardWidth = Math.max(...cardWidth);
+	let maxSpanWidth = Math.max(...spanWidth);
+
+	// Case 1: maxSpanWidth > maxCardWidth
+	if (maxSpanWidth > maxCardWidth) {
+		properWidthValue = maxSpanWidth;
+	}
+	// Case 2: maxSpanWidth < maxCardWidth
+	else if (maxSpanWidth < maxCardWidth) {
+		if (currentAlbumArtWidth < maxSpanWidth) {
+			properWidthValue = maxSpanWidth;
+		}
+		else {
+			properWidthValue = currentAlbumArtWidth;
+			maxSpanWidth = properWidthValue;
+		}
+	}
+	// Case 3: maxSpanWidth == maxCardWidth
+	else {
+		if (currentAlbumArtWidth < maxSpanWidth)
+			properWidthValue = maxSpanWidth;
+		else 
+			properWidthValue = currentAlbumArtWidth;
+	}
+	//! LOG
+	console.log("------------------------------------------\n" +
+								"maxSpan: " + maxSpanWidth + ", maxCard: " + maxCardWidth + 
+								"\ncurrentArtWidth: " + currentAlbumArtWidth + ", properWidth: " + properWidthValue +
+								"\n------------------------------------------");
+	return properWidthValue;
+}
+
+// Display album names to the right, based on images' data-artist and data-album attributes
+function showNamesRight() {
+	let currentImage = "", listText = "", listElemTarget = "";
+	let numRows = $("#numRows").val();
+	let numCols = $("#numCols").val();
+
+	// Since images and list elements share a similar ID
+	for (let i = 0; i < numRows; i++) {
+		for (let j = 0; j < numCols; j++) {
+			currentImage = '#' + i.toString() + '-' + j.toString();
+			listElemTarget = '#' + i.toString() + '_' + j.toString();
+			listText = $(currentImage).attr('data-artist') + ' - ' + $(currentImage).attr('data-album');
+			$(listElemTarget).text(listText);
+		}
+	}
+
 }
 
 // TODO: improve this function
@@ -570,11 +650,70 @@ function updateGrid() {
 	setCardFooterText();
 }
 
+let i = 0;
+// Vertical align names of albums to image, or image to names when the list are higher
+function verticalAlignNames() {
+	// Get the height of the row containing the album arts and the one containing the album names: no border, padding, margin included
+	let marginVal = $("#marginSize").val();
+	// artRowHeight will be influenced by the card margin, so I subtract it (*2 since it's both on top and on bottom): due to this, the setMargin() function will also set the margin to the #albumNames rows
+	let artRowHeight;
+	if (i==0) {
+		artRowHeight = Math.ceil($('#albumArts > :first-child').height()-(marginVal*2));
+		i++;
+	}
+	else {
+		artRowHeight = Math.ceil($('#albumArts > :first-child').height());
+	}
+	let nameRowHeight = Math.ceil($('#albumNames > :first-child').height());
+	// Since width will always be eqal to height I can take this value
+	let imageHeight = $('#artSize').val();
+	// This variable is the sum of every li element (equal to the cols value): the ul will grow with the row, so this is the minimum width of ul: used for if subcases
+	let minUlHeight = Math.ceil($('#albumNames > .row > ul > li').height()*$("#numCols").val());
+
+
+	// Case 1: artRowHeight > nameRowHeight
+	if (artRowHeight > nameRowHeight) { 
+		console.log("Case 1");
+		setRowHeight("#albumNames",artRowHeight);
+	}
+	// Case 2: artRowHeight < nameRowHeight
+	else if (artRowHeight < nameRowHeight) {
+		// Case 2.1: nameRowHeight > rtRowHeight because the user resized the image and the nameRow height followed it
+		if (minUlHeight <= artRowHeight) {
+			console.log("Case 2.1");
+			setRowHeight("#albumNames",artRowHeight);
+		}
+		// Case 2.2: nameRowHeight > artRowHeight because its li elements' heights are higher than artRow
+		else {
+			$('.card').addClass('justify-content-center');
+			setRowHeight("#albumArts",nameRowHeight);
+
+		}
+	}
+	// Case 3: artRowHeight == nameRowHeight --> do nothing
+	else {
+		if (imageHeight > artRowHeight) {
+			setRowHeight("#albumArts",imageHeight);
+		}
+		if (imageHeight < minUlHeight) {
+			setRowHeight("#albumArts",minUlHeight);
+		}
+		if (imageHeight > minUlHeight) {
+			setRowHeight("#albumArts",imageHeight);
+		}
+	}
+
+	//! LOG
+	console.log("------------------------------------------\n" +
+								"artRowHeight: " + artRowHeight + ", nameRowHeight: " + nameRowHeight + 
+								"\nminUlHeight: " + minUlHeight + ", imageHeight: " + imageHeight +
+								"\n------------------------------------------");
+}
+
+
 // Execute upon page load
 $(window).on('load', function(){
 	generateGrid();
-	resizeImg();
-	changeMargin();
 	setCardFooterText();
 	eventListener();
 });
@@ -587,9 +726,7 @@ $(document).ready(function() {
   // Background image
   changeBgColor();
 	changeTextColor ();
-  repeatBgImg();
   // Chart options
   increaseDecrease();
 	showHideAlbumNamesOptions();
-	
 });
