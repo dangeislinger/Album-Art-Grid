@@ -232,6 +232,18 @@
 								</div>
 							</div>
 						</form>
+
+						<!-- BEGIN Multi-Search Form -->
+						<form id="searchFormLuckyMulti" class="d-flex justify-content-center mb-2">
+							<div class="form-group input-group m-0 w-75">
+								<textarea name="searchTermLuckyMulti" id="searchTermLuckyMulti" rows="10" cols="30"  placeholder="Enter artist and/or album on separate lines"></textarea>
+								<div class="input-group-append bg-primary">
+									<button class="btn" type="button" onclick="albumSearchLuckyMulti()">Multi Search</button>
+								</div>
+							</div>
+						</form>
+						<!-- END Multi-Search Form -->
+						
 						<!-- Filled when user searches for albums -->
 						<div id="albumsFound" class="justify-content-center">
 
