@@ -15,6 +15,96 @@ let firstTime = true,
 const lastfm_apikey = "fc796a0c61cb69cccbaccb4706b597e4";
 const placeholderImg = "img/placeholder.jpg";
 
+// Performs multiple searches based on lines in a text area, then populates the first result for each into the grid.
+function albumSearchLuckyMulti() {
+
+	// 1. Read text from input field
+	$('#searchTermLuckyMulti').focus();
+	let searchTermLuckyMulti = $('#searchTermLuckyMulti').val();
+	let albumsFoundHTMLLuckyMulti = ""; // Init album html block
+	let k = 0;
+	let onClick = "";
+	let numRowsLuckyMulti = $("#numRows").val();
+	let numColsLuckyMulti = $("#numCols").val();
+
+	var area = document.getElementById("searchTermLuckyMulti");
+	// Debug console.log(area.value);
+	var lines = area.value.replace(/\r\n/g,"\n").split("\n");
+	var arrayLength = lines.length;
+	// Debug console.log('ArrayLength = ' + arrayLength);
+
+	let albumArtURL = "";
+	let albumArtist = "";
+	let albumTitle = "";
+	let albumArtInfo = "";
+
+	// Create array with grid reference values
+	const gridValues = new Array();
+	let colCounter = 0
+	let rowCounter = 0
+	
+	// 2. Populate array of grid reference values to reference when looping through text input below
+	for (var x = 0; x < arrayLength; x++) {
+		// If the number of columns tracked is the same as the number of columns in the grid
+		if (colCounter == numColsLuckyMulti) {
+			// Then reset the columns counter
+			colCounter = 0;
+			// And move to the next row.
+			rowCounter++;
+		}
+		// If the the column counters are less than and equal to the number of columns and rows
+		if (colCounter <= numColsLuckyMulti && rowCounter <= numRowsLuckyMulti) {
+			// Add the grid reference to the array
+			gridValues.push(rowCounter + '-' + colCounter);
+			// And move to the next column
+			colCounter++
+		}
+	}
+	console.log(gridValues);
+
+	// 3. For each item in the list, fetch a response
+	for (var n = 0; n < arrayLength; n++) {
+		
+		const line = lines[n];
+		const lineTemp = n;
+			
+		var url = "https://ws.audioscrobbler.com/2.0?method=album.search&album="+ lines[n] + "&api_key=" + lastfm_apikey + "&format=json"
+
+		fetch(url)
+			.then((response) => {
+				// handle the response
+				return response.json();
+			})
+			.then((data) => {
+				let tunes = data;
+
+				// 4. Get first search result's image and text from response
+				albumArtURL = data.results.albummatches.album[0].image[3]['#text'];
+				albumArtist = data.results.albummatches.album[0].artist;
+				albumTitle = data.results.albummatches.album[0].name;
+				albumArtInfo = albumArtist + ' - ' + albumTitle;
+				if (albumArtURL === "") {
+					albumArtURL = placeholderImg;
+					albumArtInfo = "Image not available";
+					albumArtist = albumTitle = "Not set";
+					// If the image is not available it shouldn't be clickable
+					onClick = "false";
+				}
+				// 5. Set image and text in grid
+				$('#' + gridValues[lineTemp]).attr({
+					src: albumArtURL,
+					title: albumArtInfo,
+					'data-artist': albumArtist, 
+					'data-album': albumTitle 
+				});
+			})
+			.catch(function(error) {
+				// handle the error
+				console.log('Error returned: ' + error);
+			});
+		}
+}
+
 // Shows albums found in modal 
 function albumSearch() {
 	$('#searchTerm').focus();
